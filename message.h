@@ -128,7 +128,7 @@ public:
 				msg.msg = ReadStruct<OrderDelete>(s);
 				break;
 			case EventType::TRADED:
-				msg.msg = ReadStruct<OrderTraded>(s); // Renamed OrderTrade to OrderExecuted
+				msg.msg = ReadStruct<OrderTraded>(s);
 				break;
 			default:
 				// Handling unknown message type

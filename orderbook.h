@@ -7,13 +7,12 @@
 struct Order {
     uint64_t order_id;
     uint64_t volume;
-    int32_t price; // Consider using a fixed-point representation for price if necessary
+    int32_t price;
 
-    // Constructor for convenience
     Order(uint64_t id, uint64_t vol, int32_t pr) : order_id(id), volume(vol), price(pr) {}
 };
 
-// Helper structure to hold order location info
+// Helper struct to hold order location info
 struct OrderLocation {
     int32_t price;
     std::list<Order>::iterator it;
@@ -23,10 +22,13 @@ struct OrderLocation {
 
 class OrderBook {
 private:
-    // Maps from price to a list of orders at that price
-    // Using list to efficiently add/remove orders without invalidating iterators
-    std::map<int32_t, std::list<Order>, std::greater<int32_t>> bids; // Correct for descending order
-    std::map<int32_t, std::list<Order>> asks; // Correct for ascending order (default behavior)
+    // Holds bid orders - sorted by price in descending order for fast access to the highest bids.
+    std::map<int32_t, std::list<Order>, std::greater<int32_t>> bids;
+
+    // Holds ask orders - sorted by price in ascending order for quick access to the lowest asks.
+    std::map<int32_t, std::list<Order>> asks;
+
+    // Indexes orders by ID for efficient order management (updates, deletions, executions).
     std::unordered_map<uint64_t, OrderLocation> orderIndex;
 
 public:
@@ -89,8 +91,6 @@ void OrderBook::updateOrder(uint64_t order_id, uint64_t new_volume, int32_t new_
         // Insert order with new price and volume
         Order newOrder(order_id, new_volume, new_price);
         addOrder(newOrder, loc.isBid);
-
-        // Note: The addOrder method must be updated to handle orderIndex updates.
     } else {
         // Update volume directly if the price hasn't changed
         loc.it->volume = new_volume;
@@ -125,7 +125,6 @@ void OrderBook::deleteOrder(uint64_t order_id) {
             asks.erase(loc.price);
         }
     }
-
     // Remove the order from the index
     orderIndex.erase(it);
 }
@@ -137,7 +136,6 @@ void OrderBook::executeOrder(uint64_t order_id, uint64_t executed_volume) {
         std::cerr << "Order ID not found for execution: " << order_id << std::endl;
         return;
     }
-
     // Retrieve the order's location and details
     OrderLocation loc = it->second;
 
@@ -162,7 +160,6 @@ void OrderBook::executeOrder(uint64_t order_id, uint64_t executed_volume) {
                 asks.erase(loc.price);
             }
         }
-
         // Remove the order from the orderIndex
         orderIndex.erase(it);
     }
@@ -171,8 +168,7 @@ void OrderBook::executeOrder(uint64_t order_id, uint64_t executed_volume) {
 std::vector<std::pair<int32_t, uint64_t>> OrderBook::getDepthSnapshot(bool isBid, size_t levels) {
     std::vector<std::pair<int32_t, uint64_t>> snapshot;
 
-    // Since bids and asks are of different types due to their sorting criteria,
-    // we handle them separately within their respective conditional blocks.
+    // Handle bids and asks respective of their sorting criteria
     if (isBid) {
         // Process bids
         size_t count = 0;
