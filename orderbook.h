@@ -25,8 +25,8 @@ class OrderBook {
 private:
     // Maps from price to a list of orders at that price
     // Using list to efficiently add/remove orders without invalidating iterators
-    std::map<int32_t, std::list<Order>> bids;
-    std::map<int32_t, std::list<Order>, std::greater<int32_t>> asks;
+    std::map<int32_t, std::list<Order>, std::greater<int32_t>> bids; // Correct for descending order
+    std::map<int32_t, std::list<Order>> asks; // Correct for ascending order (default behavior)
     std::unordered_map<uint64_t, OrderLocation> orderIndex;
 
 public:
